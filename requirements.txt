@@ -1,0 +1,9 @@
+streamlit>=1.36
+pandas>=2.0
+numpy>=1.26
+requests>=2.31
+scikit-learn>=1.4
+xgboost>=2.0
+shap>=0.45
+gspread>=6.0
+google-auth>=2.30
