@@ -7,10 +7,20 @@ mengunduh data pertandingan historis Liga Primer Inggris dari DataHub.io
 
 Setiap musim tersedia sebagai file CSV stabil di:
     https://datahub.io/football/english-premier-league/_r/-/season-XXYY.csv
+
+Untuk mempercepat waktu muat (terutama saat aplikasi "bangun" dari mode
+tidur di hosting gratis), modul ini:
+  1. Mengunduh semua musim SECARA PARALEL (bukan satu per satu).
+  2. Menyimpan hasil gabungan ke cache file di disk, sehingga proses
+     berikutnya (selama file cache masih segar) cukup membaca file lokal
+     tanpa perlu mengunduh ulang dari DataHub.io.
 """
 
 from __future__ import annotations
 
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import StringIO
 
 import numpy as np
@@ -19,6 +29,9 @@ import requests
 import streamlit as st
 
 DATAHUB_BASE_URL = "https://datahub.io/football/english-premier-league/_r/-/{season}.csv"
+
+DISK_CACHE_PATH = os.path.join(os.path.dirname(__file__), ".cache_epl_data.parquet")
+DISK_CACHE_MAX_AGE_SECONDS = 12 * 60 * 60  # selaras dengan ttl st.cache_data di bawah
 
 # 10 musim kompetisi terakhir (format 20 tim / 38 pekan) -> sesuai Bab 3.2
 # "Sampel dan Ukuran Sampel" pada dokumen metodologi penelitian.
@@ -50,7 +63,7 @@ NUMERIC_COLUMNS = [
 ]
 
 
-def _fetch_season_csv(season: str, timeout: int = 15) -> pd.DataFrame | None:
+def _fetch_season_csv(season: str, timeout: int = 12) -> pd.DataFrame | None:
     """Mengunduh satu file CSV musim dari DataHub.io. Mengembalikan None bila gagal."""
     url = DATAHUB_BASE_URL.format(season=season)
     try:
@@ -63,6 +76,26 @@ def _fetch_season_csv(season: str, timeout: int = 15) -> pd.DataFrame | None:
         return df
     except Exception:
         return None
+
+
+def _fetch_all_seasons_parallel(seasons: list[str], max_workers: int = 6):
+    """
+    Mengunduh semua musim SECARA PARALEL memakai thread pool, jauh lebih
+    cepat dibanding mengunduh satu per satu terutama saat latensi jaringan
+    ke DataHub.io cukup tinggi (mis. dari server hosting di luar negeri).
+    """
+    frames: list[pd.DataFrame] = []
+    failed: list[str] = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_season = {executor.submit(_fetch_season_csv, s): s for s in seasons}
+        for future in as_completed(future_to_season):
+            season = future_to_season[future]
+            df = future.result()
+            if df is not None:
+                frames.append(df)
+            else:
+                failed.append(season)
+    return frames, failed
 
 
 def _generate_fallback_dataset(n_teams: int = 20, n_seasons: int = 3, seed: int = 42) -> pd.DataFrame:
@@ -107,29 +140,52 @@ def _generate_fallback_dataset(n_teams: int = 20, n_seasons: int = 3, seed: int 
     return pd.DataFrame(rows)
 
 
+def _load_disk_cache() -> pd.DataFrame | None:
+    """Membaca cache dataset dari disk jika ada dan masih cukup segar."""
+    if not os.path.exists(DISK_CACHE_PATH):
+        return None
+    age = time.time() - os.path.getmtime(DISK_CACHE_PATH)
+    if age > DISK_CACHE_MAX_AGE_SECONDS:
+        return None
+    try:
+        return pd.read_parquet(DISK_CACHE_PATH)
+    except Exception:
+        return None
+
+
+def _save_disk_cache(data: pd.DataFrame) -> None:
+    try:
+        data.to_parquet(DISK_CACHE_PATH, index=False)
+    except Exception:
+        pass  # Cache disk bersifat opsional; kegagalan menulis tidak fatal
+
+
 @st.cache_data(show_spinner=False, ttl=60 * 60 * 12)
 def load_epl_dataset(seasons: tuple[str, ...] | None = None):
     """
     Mengunduh & menggabungkan data pertandingan EPL dari DataHub.io.
+
+    Urutan sumber data (dari yang tercepat): cache disk yang masih segar
+    -> unduhan paralel dari DataHub.io (lalu ditulis ke cache disk) ->
+    dataset sintetis darurat bila keduanya gagal.
 
     Returns
     -------
     data : pd.DataFrame
         Dataset gabungan yang sudah dibersihkan & diurutkan berdasarkan tanggal.
     failed_seasons : list[str]
-        Daftar musim yang gagal diunduh (kosong bila semua berhasil).
+        Daftar musim yang gagal diunduh (kosong bila semua berhasil, atau
+        bila data diambil dari cache disk).
     used_fallback : bool
         True bila seluruh unduhan gagal dan dataset sintetis darurat dipakai.
     """
     seasons = list(seasons) if seasons else DEFAULT_SEASONS
-    frames = []
-    failed = []
-    for season in seasons:
-        df = _fetch_season_csv(season)
-        if df is not None:
-            frames.append(df)
-        else:
-            failed.append(season)
+
+    cached = _load_disk_cache()
+    if cached is not None:
+        return cached, [], False
+
+    frames, failed = _fetch_all_seasons_parallel(seasons)
 
     used_fallback = False
     if not frames:
@@ -149,6 +205,10 @@ def load_epl_dataset(seasons: tuple[str, ...] | None = None):
         data[col] = pd.to_numeric(data[col], errors="coerce")
 
     data = data.sort_values("Date").reset_index(drop=True)
+
+    if not used_fallback:
+        _save_disk_cache(data)
+
     return data, failed, used_fallback
 
 

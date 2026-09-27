@@ -123,44 +123,50 @@ def build_feature_dataset(data: pd.DataFrame):
     fitur pra-pertandingan setiap laga, sekaligus mengembalikan STATE
     TERKINI (form & head-to-head) setiap tim -- dipakai untuk menyusun
     fitur pertandingan baru yang dipilih pengguna di aplikasi.
+
+    Memakai itertuples() (bukan iterrows()) karena jauh lebih cepat untuk
+    dataset beribu-ribu baris -- penting agar waktu muat aplikasi tetap
+    singkat, terutama saat proses baru "bangun" dari mode tidur di hosting.
     """
     team_stats = defaultdict(_empty_team_stats)
     h2h_history = defaultdict(list)
+    has_shots = "HS" in data.columns
+    has_sot = "HST" in data.columns
 
     rows = []
-    for _, m in data.iterrows():
-        home, away = m["HomeTeam"], m["AwayTeam"]
+    for m in data.itertuples(index=False):
+        home, away = m.HomeTeam, m.AwayTeam
         hs, as_ = team_stats[home], team_stats[away]
         key = frozenset((home, away))
+        fthg, ftag = m.FTHG, m.FTAG
 
         feat = {
-            "Date": m["Date"], "Season": m.get("Season"),
+            "Date": m.Date, "Season": getattr(m, "Season", None),
             "HomeTeam": home, "AwayTeam": away,
             **_team_form_features(hs, "home"),
             **_team_form_features(as_, "away"),
             **_h2h_features(h2h_history, key, home),
-            "FTHG": m["FTHG"], "FTAG": m["FTAG"], "FTR": m["FTR"],
+            "FTHG": fthg, "FTAG": ftag, "FTR": m.FTR,
         }
         rows.append(feat)
 
         # Perbarui histori SETELAH fitur diambil -> mencegah kebocoran data
-        fthg, ftag = m["FTHG"], m["FTAG"]
         hs["goals_for"].append(fthg)
         hs["goals_against"].append(ftag)
         as_["goals_for"].append(ftag)
         as_["goals_against"].append(fthg)
         hs["points"].append(3 if fthg > ftag else (1 if fthg == ftag else 0))
         as_["points"].append(3 if ftag > fthg else (1 if fthg == ftag else 0))
-        if pd.notna(m.get("HS")):
-            hs["shots"].append(m["HS"])
-            as_["shots"].append(m["AS"])
-            hs["shots_faced"].append(m["AS"])
-            as_["shots_faced"].append(m["HS"])
-        if pd.notna(m.get("HST")):
-            hs["shots_on_target"].append(m["HST"])
-            as_["shots_on_target"].append(m["AST"])
-            hs["shots_on_target_faced"].append(m["AST"])
-            as_["shots_on_target_faced"].append(m["HST"])
+        if has_shots and pd.notna(m.HS):
+            hs["shots"].append(m.HS)
+            as_["shots"].append(m.AS)
+            hs["shots_faced"].append(m.AS)
+            as_["shots_faced"].append(m.HS)
+        if has_sot and pd.notna(m.HST):
+            hs["shots_on_target"].append(m.HST)
+            as_["shots_on_target"].append(m.AST)
+            hs["shots_on_target_faced"].append(m.AST)
+            as_["shots_on_target_faced"].append(m.HST)
         h2h_history[key].append({"home": home, "away": away, "fthg": fthg, "ftag": ftag})
 
     feature_df = pd.DataFrame(rows)

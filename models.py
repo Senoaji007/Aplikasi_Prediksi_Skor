@@ -13,6 +13,10 @@ Metodologi Penelitian):
 
 from __future__ import annotations
 
+import hashlib
+import os
+
+import joblib
 import numpy as np
 import pandas as pd
 import shap
@@ -33,6 +37,7 @@ from sklearn.preprocessing import LabelEncoder
 from features import FEATURE_COLUMNS
 
 RANDOM_STATE = 42
+MODEL_CACHE_PATH = os.path.join(os.path.dirname(__file__), ".cache_model_artifacts.joblib")
 
 
 def _classification_metrics(y_true, y_pred) -> dict:
@@ -44,6 +49,45 @@ def _classification_metrics(y_true, y_pred) -> dict:
     }
 
 
+def _dataset_fingerprint(feature_df: pd.DataFrame, test_frac: float) -> str:
+    """
+    Sidik jari ringan dari data fitur & konfigurasi pelatihan, dipakai untuk
+    memvalidasi cache model di disk -- kalau datanya persis sama dengan
+    training terakhir, model tidak perlu dilatih ulang dari nol.
+    """
+    key_parts = [
+        str(len(feature_df)),
+        str(feature_df["Date"].max()) if "Date" in feature_df.columns and len(feature_df) else "",
+        str(test_frac),
+        ",".join(FEATURE_COLUMNS),
+    ]
+    return hashlib.md5("|".join(key_parts).encode()).hexdigest()
+
+
+def _load_model_cache(fingerprint: str) -> dict | None:
+    if not os.path.exists(MODEL_CACHE_PATH):
+        return None
+    try:
+        cached = joblib.load(MODEL_CACHE_PATH)
+        if cached.get("fingerprint") != fingerprint:
+            return None
+        artifacts = cached["artifacts"]
+        # Explainer SHAP dibangun ulang (cepat) alih-alih di-pickle, untuk
+        # menghindari ketidakcocokan versi shap antar proses/deploy.
+        artifacts["explainer"] = shap.TreeExplainer(artifacts["xgb_clf"])
+        return artifacts
+    except Exception:
+        return None
+
+
+def _save_model_cache(fingerprint: str, artifacts: dict) -> None:
+    try:
+        to_save = {k: v for k, v in artifacts.items() if k != "explainer"}
+        joblib.dump({"fingerprint": fingerprint, "artifacts": to_save}, MODEL_CACHE_PATH)
+    except Exception:
+        pass  # Cache disk bersifat opsional; kegagalan menulis tidak fatal
+
+
 @st.cache_resource(show_spinner=False)
 def train_and_evaluate(feature_df: pd.DataFrame, test_frac: float = 0.15):
     """
@@ -51,7 +95,16 @@ def train_and_evaluate(feature_df: pd.DataFrame, test_frac: float = 0.15):
     Forest, Logistic Regression) menggunakan time-based split, lalu
     mengevaluasinya dengan metrik Accuracy/Precision/Recall/F1 (klasifikasi
     hasil pertandingan) dan RMSE/MAE (regresi skor).
+
+    Hasil pelatihan disimpan ke cache disk (lihat MODEL_CACHE_PATH); bila
+    data & konfigurasi tidak berubah, proses berikutnya (mis. saat aplikasi
+    bangun dari mode tidur) cukup memuat model dari disk tanpa melatih ulang.
     """
+    fingerprint = _dataset_fingerprint(feature_df, test_frac)
+    cached_artifacts = _load_model_cache(fingerprint)
+    if cached_artifacts is not None:
+        return cached_artifacts
+
     df = feature_df.dropna(subset=["FTHG", "FTAG", "FTR"]).sort_values("Date").reset_index(drop=True)
 
     X = df[FEATURE_COLUMNS].copy()
@@ -124,7 +177,7 @@ def train_and_evaluate(feature_df: pd.DataFrame, test_frac: float = 0.15):
 
     explainer = shap.TreeExplainer(xgb_clf)
 
-    return {
+    artifacts = {
         "xgb_clf": xgb_clf, "rf_clf": rf_clf, "logreg": logreg,
         "xgb_home": xgb_home, "xgb_away": xgb_away,
         "label_encoder": label_encoder, "medians": medians,
@@ -132,6 +185,8 @@ def train_and_evaluate(feature_df: pd.DataFrame, test_frac: float = 0.15):
         "explainer": explainer,
         "n_train": len(X_train), "n_test": len(X_test),
     }
+    _save_model_cache(fingerprint, artifacts)
+    return artifacts
 
 
 def predict_match(artifacts: dict, snapshot: dict) -> dict:
