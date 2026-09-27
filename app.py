@@ -2,14 +2,13 @@
 app.py
 ======
 Prototipe sistem cerdas berbasis web untuk memprediksi skor pertandingan
-Liga Primer Inggris (EPL), sesuai Bab 4 "Desain Sistem" pada dokumen
-Metodologi Penelitian:
+Liga Primer Inggris (EPL):
 
   - Aktor "End User"   -> menu "Prediksi Pertandingan", "Statistik Tim &
     Klasemen Liga", dan "Kuesioner Usabilitas" (System Usability Scale)
   - Aktor "Peneliti"   -> menu "Tentang Sistem & Model" (latih/evaluasi model)
 
-Alur "Prediksi Pertandingan" mengikuti Diagram Aktivitas (Gambar 2):
+Alur "Prediksi Pertandingan":
   Buka aplikasi -> pilih tim kandang & tandang -> validasi pilihan
   -> ambil fitur pra-pertandingan -> jalankan model XGBoost
   -> tampilkan skor & probabilitas -> tampilkan penjelasan SHAP
@@ -45,11 +44,10 @@ WIB = ZoneInfo("Asia/Jakarta")  # Server hosting biasanya berjalan di UTC; catat
 QUESTIONNAIRE_FILE = os.path.join(os.path.dirname(__file__), "usability_responses.csv")
 
 # Instrumen System Usability Scale (SUS) baku - 10 pernyataan berpolaritas
-# bergantian (ganjil = positif, genap = negatif), skala Likert 1-5,
-# sesuai Bab 6.2 Metodologi Penelitian.
+# bergantian (ganjil = positif, genap = negatif), skala Likert 1-5.
 QUESTIONNAIRE_ITEMS = [
     ("Saya pikir saya akan sering menggunakan sistem prediksi skor ini.", True),
-    ("Saya merasa sistem ini rumit untuk digunakan tanpa perlu.", False),
+    ("Saya merasa sistem ini rumit untuk digunakan.", False),
     ("Saya pikir sistem ini mudah digunakan.", True),
     ("Saya rasa saya membutuhkan bantuan orang teknis untuk bisa menggunakan sistem ini.", False),
     ("Saya merasa berbagai fitur dalam sistem ini (prediksi, statistik, klasemen) terintegrasi dengan baik.", True),
@@ -350,7 +348,7 @@ else:
     st.title("Kuesioner Usabilitas Prototipe (System Usability Scale)")
     st.write(
         "Instrumen ini memakai 10 pernyataan baku **System Usability Scale (SUS)** "
-        "(Brooke, 1986), sesuai Bab 6.2 Metodologi Penelitian. "
+        "(Brooke, 1986). "
         "Skala: 1 = Sangat Tidak Setuju, 5 = Sangat Setuju."
     )
 
