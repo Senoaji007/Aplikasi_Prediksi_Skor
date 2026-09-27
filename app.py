@@ -1,7 +1,29 @@
+"""
+app.py
+======
+Prototipe sistem cerdas berbasis web untuk memprediksi skor pertandingan
+Liga Primer Inggris (EPL), sesuai Bab 4 "Desain Sistem" pada dokumen
+Metodologi Penelitian:
+
+  - Aktor "End User"   -> menu "Prediksi Pertandingan", "Statistik Tim &
+    Klasemen Liga", dan "Kuesioner Usabilitas" (System Usability Scale)
+  - Aktor "Peneliti"   -> menu "Tentang Sistem & Model" (latih/evaluasi model)
+
+Alur "Prediksi Pertandingan" mengikuti Diagram Aktivitas (Gambar 2):
+  Buka aplikasi -> pilih tim kandang & tandang -> validasi pilihan
+  -> ambil fitur pra-pertandingan -> jalankan model XGBoost
+  -> tampilkan skor & probabilitas -> tampilkan penjelasan SHAP
+  -> ulangi / lanjut ke kuesioner usabilitas.
+
+Jalankan dengan:
+    streamlit run app.py
+"""
+
 from __future__ import annotations
 
 import datetime as dt
 import os
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import streamlit as st
@@ -17,6 +39,8 @@ from features import FEATURE_LABELS, build_feature_dataset, get_snapshot_feature
 from models import predict_match, train_and_evaluate
 from standings import compute_standings, get_team_season_stats
 import sheets_utils
+
+WIB = ZoneInfo("Asia/Jakarta")  # Server hosting biasanya berjalan di UTC; catat waktu dalam WIB agar konsisten
 
 QUESTIONNAIRE_FILE = os.path.join(os.path.dirname(__file__), "usability_responses.csv")
 
@@ -94,7 +118,7 @@ def _save_questionnaire_response(scores: list[int]) -> str:
     otomatis jatuh ke penyimpanan CSV lokal. Mengembalikan backend yang
     dipakai: 'sheets' atau 'csv'.
     """
-    row = {"timestamp": dt.datetime.now().isoformat(timespec="seconds")}
+    row = {"timestamp": dt.datetime.now(WIB).isoformat(timespec="seconds")}
     for i in range(1, len(QUESTIONNAIRE_ITEMS) + 1):
         row[f"Q{i}"] = scores[i - 1]
     row["SUS_Score"] = round(_sus_score(scores), 2)
@@ -315,7 +339,7 @@ elif page == "Tentang Sistem & Model":
 
     st.caption(
         "XGBoost dipakai sebagai model utama; Random Forest sebagai benchmark dan "
-        "Logistic Regression sebagai baseline klasifikasi."
+        "Logistic Regression sebagai baseline klasifikasi, sesuai Bab 6.1 Metodologi Penelitian."
     )
 
 
@@ -326,7 +350,7 @@ else:
     st.title("Kuesioner Usabilitas Prototipe (System Usability Scale)")
     st.write(
         "Instrumen ini memakai 10 pernyataan baku **System Usability Scale (SUS)** "
-        "(Brooke, 1986). "
+        "(Brooke, 1986), sesuai Bab 6.2 Metodologi Penelitian. "
         "Skala: 1 = Sangat Tidak Setuju, 5 = Sangat Setuju."
     )
 
