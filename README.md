@@ -12,20 +12,16 @@ Pra-Pertandingan"*.
 
 Kuesioner memakai 10 pernyataan baku **System Usability Scale (SUS)**
 (Brooke, 1986) dengan polaritas bergantian (ganjil positif, genap negatif),
-skala Likert 1-5, sesuai Bab 6.2 metodologi penelitian. Setiap jawaban
+skala Likert 1-5. Setiap jawaban
 otomatis dikonversi menjadi skor SUS 0-100 memakai rumus baku
 `((jumlah skor per-item) x 2.5)` dan diberi interpretasi (Poor/OK/Good/
 Excellent).
 
 **Penyimpanan jawaban** memakai dua backend dengan fallback otomatis:
-1. **Google Sheets** (direkomendasikan untuk penyebaran publik) — dipakai
-   otomatis bila kredensial sudah dikonfigurasi (lihat bagian "Integrasi
-   Google Sheets" di bawah).
+1. **Google Sheets**.
 2. **File CSV lokal** (`usability_responses.csv`) — dipakai otomatis
    sebagai fallback jika Google Sheets belum dikonfigurasi atau gagal
-   diakses. Cocok untuk pengujian lokal, tapi **akan hilang** jika
-   aplikasi di-restart/redeploy di hosting gratis seperti Streamlit
-   Community Cloud.
+   diakses.
 
 Halaman kuesioner selalu menampilkan backend mana yang sedang aktif, serta
 rata-rata skor SUS dan rata-rata skor per pernyataan dari seluruh jawaban
@@ -144,15 +140,6 @@ dicetak/kebobolan, selisih gol, clean sheet, poin) langsung dari data
 pertandingan yang sudah diunduh — bisa dipilih per musim (default: musim
 terbaru yang tersedia, misalnya 2025/26), dilengkapi statistik detail per
 tim yang dipecah performa kandang vs tandang.
-
-## Kuesioner Usabilitas (System Usability Scale)
-
-Kuesioner memakai 10 pernyataan baku **System Usability Scale (SUS)**
-(Brooke, 1986) dengan polaritas bergantian (ganjil positif, genap negatif),
-skala Likert 1-5, sesuai Bab 6.2 metodologi penelitian. Setiap jawaban
-otomatis dikonversi menjadi skor SUS 0-100 dan diberi interpretasi
-(Poor/OK/Good/Excellent). Lihat bagian "Kuesioner Usabilitas" di atas
-untuk detail penyimpanan (Google Sheets / CSV lokal).
 
 ## Catatan & Keterbatasan
 
