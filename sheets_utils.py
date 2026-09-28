@@ -5,25 +5,6 @@ Penyimpanan jawaban kuesioner usabilitas (SUS) ke Google Sheets, agar
 data responden TIDAK HILANG saat aplikasi di-restart atau di-redeploy
 di hosting gratis seperti Streamlit Community Cloud (yang memakai
 penyimpanan sementara/ephemeral).
-
-Konfigurasi bersifat OPSIONAL: jika kredensial belum diisi lewat
-st.secrets, is_configured() akan mengembalikan False dan app.py akan
-otomatis memakai penyimpanan CSV lokal sebagai fallback -- lihat
-Bagian "Integrasi Google Sheets" pada README.md untuk cara setup.
-
-Format st.secrets yang dibutuhkan (mis. di .streamlit/secrets.toml):
-
-    [gsheets]
-    sheet_id = "ID_SPREADSHEET_ANDA"
-
-    [gcp_service_account]
-    type = "service_account"
-    project_id = "..."
-    private_key_id = "..."
-    private_key = "-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"
-    client_email = "...@....iam.gserviceaccount.com"
-    client_id = "..."
-    token_uri = "https://oauth2.googleapis.com/token"
 """
 
 from __future__ import annotations
