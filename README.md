@@ -2,11 +2,7 @@
 
 Prototipe aplikasi web berbasis **Streamlit** dan **Machine Learning (XGBoost)**
 untuk memprediksi skor pertandingan Liga Primer Inggris berdasarkan performa
-tim pra-pertandingan. Dibangun mengikuti Bab 4 "Desain Sistem" (diagram use
-case & diagram aktivitas) pada dokumen Metodologi Penelitian
-*"Pengembangan Sistem Cerdas Berbasis Web untuk Memprediksi Skor Pertandingan
-Liga Primer Inggris Menggunakan Machine Learning dan Analisis Performa Tim
-Pra-Pertandingan"*.
+tim pra-pertandingan.
 
 ## Kuesioner Usabilitas (System Usability Scale)
 
@@ -27,37 +23,6 @@ Halaman kuesioner selalu menampilkan backend mana yang sedang aktif, serta
 rata-rata skor SUS dan rata-rata skor per pernyataan dari seluruh jawaban
 yang sudah masuk.
 
-### Integrasi Google Sheets
-
-Agar jawaban responden tersimpan permanen (tidak hilang saat aplikasi
-di-restart), hubungkan ke Google Sheets dengan langkah berikut:
-
-1. **Buat Google Sheet baru** (kosong saja), lalu salin ID-nya dari URL:
-   `https://docs.google.com/spreadsheets/d/ID_SPREADSHEET_ADA_DI_SINI/edit`.
-2. Buka [Google Cloud Console](https://console.cloud.google.com/), buat
-   project baru (atau pakai yang sudah ada), lalu aktifkan **Google
-   Sheets API** dan **Google Drive API**.
-3. Buat **Service Account** (menu *IAM & Admin -> Service Accounts ->
-   Create Service Account*), lalu buat **key** baru bertipe **JSON** dan
-   unduh filenya.
-4. Buka file JSON tersebut, salin nilainya ke `.streamlit/secrets.toml`
-   mengikuti format pada `.streamlit/secrets.toml.example` (field
-   `client_email`, `private_key`, `project_id`, dst. persis sama dengan
-   isi file JSON). Isi juga `sheet_id` dengan ID dari langkah 1.
-5. **Bagikan (Share) Google Sheet** yang dibuat di langkah 1 ke alamat
-   email `client_email` dari file JSON tadi (mis.
-   `nama-app@project-id.iam.gserviceaccount.com`) dengan akses **Editor**
-   — tanpa langkah ini, aplikasi tidak akan bisa menulis ke sheet.
-6. Jalankan aplikasi secara lokal — jika berhasil, halaman kuesioner akan
-   menampilkan "Jawaban akan disimpan ke: **Google Sheets**".
-7. **Untuk Streamlit Community Cloud**: jangan commit `secrets.toml` asli
-   ke GitHub. Sebagai gantinya, buka pengaturan aplikasi di Streamlit
-   Cloud -> **Settings -> Secrets**, lalu tempel seluruh isi
-   `secrets.toml` Anda di sana.
-
-Jika kredensial salah atau Google Sheets tidak bisa diakses, aplikasi akan
-menampilkan peringatan dan otomatis kembali memakai CSV lokal — jawaban
-tidak pernah hilang begitu saja saat proses submit.
 
 ## Cara Menjalankan
 
@@ -82,7 +47,6 @@ selama sesi server aktif.
 | `standings.py` | Perhitungan klasemen liga & statistik kandang/tandang per tim per musim |
 | `sheets_utils.py` | Integrasi penyimpanan jawaban kuesioner ke Google Sheets (opsional, fallback ke CSV lokal) |
 | `requirements.txt` | Daftar dependensi Python |
-| `.streamlit/secrets.toml.example` | Contoh format kredensial Google Sheets (salin jadi `secrets.toml`, isi nilai asli) |
 
 ## Sumber Data
 
@@ -90,31 +54,13 @@ selama sesi server aktif.
   (mendistribusikan ulang data dari [Football-Data.co.uk](https://www.football-data.co.uk/englandm.php)).
 - Musim yang dipakai secara default: 10 musim terakhir dengan format 20
   tim/38 pekan (`season-1617` s.d. `season-2526`, yaitu musim 2016/17 s.d.
-  2025/26), sesuai Bab 3.2 "Sampel dan Ukuran Sampel" pada metodologi
-  penelitian. Cutoff sengaja diletakkan pada musim 2025/26 karena EPL saat
+  2025/26). Cutoff sengaja diletakkan pada musim 2025/26 karena EPL saat
   ini sudah memasuki musim 2026/27, sehingga 2025/26 adalah musim terakhir
   yang datanya sudah lengkap 38 pekan. Bisa diubah lewat `DEFAULT_SEASONS`
   di `data_utils.py`.
 - Jika DataHub.io tidak dapat diakses (mis. jaringan terbatas), aplikasi
   otomatis memakai **dataset sintetis darurat** agar tetap bisa didemokan,
   dan menampilkan peringatan di sidebar.
-
-## Pemetaan ke Desain Sistem
-
-**Diagram Use Case:**
-- *End User*: menu "Prediksi Pertandingan" (pilih tim, lihat skor & probabilitas,
-  lihat penjelasan SHAP, lihat statistik pra-pertandingan), menu "Statistik
-  Tim & Klasemen Liga" (klasemen musim terbaru & statistik kandang/tandang
-  per tim), dan menu "Kuesioner Usabilitas".
-- *Peneliti*: menu "Tentang Sistem & Model" menampilkan hasil pelatihan,
-  evaluasi (Accuracy/Precision/Recall/F1, RMSE/MAE), dan status model yang
-  sudah "di-deploy" ke aplikasi.
-
-**Diagram Aktivitas** (alur menu "Prediksi Pertandingan"):
-Buka aplikasi → pilih tim kandang & tandang → validasi (tim tidak boleh sama)
-→ ambil fitur pra-pertandingan → jalankan model XGBoost → tampilkan skor &
-probabilitas → tampilkan penjelasan SHAP → ganti tim untuk mencoba lagi, atau
-lanjut ke kuesioner usabilitas.
 
 ## Metode Machine Learning
 
