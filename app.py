@@ -1,21 +1,6 @@
 """
-app.py
-======
-Prototipe sistem cerdas berbasis web untuk memprediksi skor pertandingan
+Prototipe sistem berbasis web untuk memprediksi skor pertandingan
 Liga Primer Inggris (EPL):
-
-  - Aktor "End User"   -> menu "Prediksi Pertandingan", "Statistik Tim &
-    Klasemen Liga", dan "Kuesioner Usabilitas" (System Usability Scale)
-  - Aktor "Peneliti"   -> menu "Tentang Sistem & Model" (latih/evaluasi model)
-
-Alur "Prediksi Pertandingan":
-  Buka aplikasi -> pilih tim kandang & tandang -> validasi pilihan
-  -> ambil fitur pra-pertandingan -> jalankan model XGBoost
-  -> tampilkan skor & probabilitas -> tampilkan penjelasan SHAP
-  -> ulangi / lanjut ke kuesioner usabilitas.
-
-Jalankan dengan:
-    streamlit run app.py
 """
 
 from __future__ import annotations
@@ -47,13 +32,13 @@ QUESTIONNAIRE_FILE = os.path.join(os.path.dirname(__file__), "usability_response
 # bergantian (ganjil = positif, genap = negatif), skala Likert 1-5.
 QUESTIONNAIRE_ITEMS = [
     ("Saya pikir saya akan sering menggunakan sistem prediksi skor ini.", True),
-    ("Saya merasa sistem ini rumit untuk digunakan.", False),
+    ("Saya merasa sistem ini rumit atau terlalu kompleks untuk digunakan.", False),
     ("Saya pikir sistem ini mudah digunakan.", True),
     ("Saya rasa saya membutuhkan bantuan orang teknis untuk bisa menggunakan sistem ini.", False),
     ("Saya merasa berbagai fitur dalam sistem ini (prediksi, statistik, klasemen) terintegrasi dengan baik.", True),
     ("Saya rasa ada terlalu banyak hal yang tidak konsisten pada sistem ini.", False),
     ("Saya membayangkan kebanyakan orang akan belajar menggunakan sistem ini dengan cepat.", True),
-    ("Saya merasa sistem ini sangat rumit/merepotkan untuk digunakan.", False),
+    ("Saya merasa sistem ini sangat membingungkan saat digunakan.", False),
     ("Saya merasa percaya diri saat menggunakan sistem ini.", True),
     ("Saya perlu mempelajari banyak hal terlebih dahulu sebelum bisa menggunakan sistem ini dengan lancar.", False),
 ]
@@ -337,7 +322,7 @@ elif page == "Tentang Sistem & Model":
 
     st.caption(
         "XGBoost dipakai sebagai model utama; Random Forest sebagai benchmark dan "
-        "Logistic Regression sebagai baseline klasifikasi, sesuai Bab 6.1 Metodologi Penelitian."
+        "Logistic Regression sebagai baseline klasifikasi."
     )
 
 
