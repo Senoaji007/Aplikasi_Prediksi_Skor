@@ -333,7 +333,7 @@ else:
     st.title("Kuesioner Usabilitas Prototipe (System Usability Scale)")
     st.write(
         "Instrumen ini memakai 10 pernyataan baku **System Usability Scale (SUS)** "
-        "(Brooke, 1996)."
+        "(Brooke, 1996). "
         "Skala: 1 = Sangat Tidak Setuju, 5 = Sangat Setuju."
     )
 
