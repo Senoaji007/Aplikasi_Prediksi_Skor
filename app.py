@@ -32,7 +32,7 @@ QUESTIONNAIRE_FILE = os.path.join(os.path.dirname(__file__), "usability_response
 # bergantian (ganjil = positif, genap = negatif), skala Likert 1-5.
 QUESTIONNAIRE_ITEMS = [
     ("Saya pikir saya akan sering menggunakan sistem prediksi skor ini.", True),
-    ("Saya merasa sistem ini rumit atau terlalu kompleks untuk digunakan.", False),
+    ("Saya merasa sistem ini terlalu rumit dan tidak perlu serumit itu.", False),
     ("Saya pikir sistem ini mudah digunakan.", True),
     ("Saya rasa saya membutuhkan bantuan orang teknis untuk bisa menggunakan sistem ini.", False),
     ("Saya merasa berbagai fitur dalam sistem ini (prediksi, statistik, klasemen) terintegrasi dengan baik.", True),
@@ -45,7 +45,7 @@ QUESTIONNAIRE_ITEMS = [
 
 
 def _sus_score(scores: list[int]) -> float:
-    """Menghitung skor SUS (0-100) sesuai rumus baku Brooke (1986)."""
+    """Menghitung skor SUS (0-100) sesuai rumus baku Brooke (1996)."""
     total = 0
     for (_, is_positive), s in zip(QUESTIONNAIRE_ITEMS, scores):
         total += (s - 1) if is_positive else (5 - s)
@@ -333,7 +333,7 @@ else:
     st.title("Kuesioner Usabilitas Prototipe (System Usability Scale)")
     st.write(
         "Instrumen ini memakai 10 pernyataan baku **System Usability Scale (SUS)** "
-        "(Brooke, 1986). "
+        "(Brooke, 1996)."
         "Skala: 1 = Sangat Tidak Setuju, 5 = Sangat Setuju."
     )
 
