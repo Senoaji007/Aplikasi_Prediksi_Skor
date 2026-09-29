@@ -7,7 +7,7 @@ tim pra-pertandingan.
 ## Kuesioner Usabilitas (System Usability Scale)
 
 Kuesioner memakai 10 pernyataan baku **System Usability Scale (SUS)**
-(Brooke, 1986) dengan polaritas bergantian (ganjil positif, genap negatif),
+(Brooke, 1996) dengan polaritas bergantian (ganjil positif, genap negatif),
 skala Likert 1-5. Setiap jawaban
 otomatis dikonversi menjadi skor SUS 0-100 memakai rumus baku
 `((jumlah skor per-item) x 2.5)` dan diberi interpretasi (Poor/OK/Good/
