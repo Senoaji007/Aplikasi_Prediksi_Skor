@@ -1,8 +1,7 @@
 """
 features.py
 ============
-Rekayasa fitur performa tim PRA-PERTANDINGAN (Bab 5.1 poin 4 Metodologi
-Penelitian): form 5 laga terakhir, rata-rata gol, rata-rata statistik
+Rekayasa fitur performa tim PRA-PERTANDINGAN : form 5 laga terakhir, rata-rata gol, rata-rata statistik
 tembakan, dan rekam jejak head-to-head -- dihitung secara satu-pass
 kronologis agar TIDAK ADA kebocoran data (data leakage) dari hasil
 pertandingan ke fitur pertandingan itu sendiri.
