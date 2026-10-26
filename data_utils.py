@@ -33,8 +33,7 @@ DATAHUB_BASE_URL = "https://datahub.io/football/english-premier-league/_r/-/{sea
 DISK_CACHE_PATH = os.path.join(os.path.dirname(__file__), ".cache_epl_data.parquet")
 DISK_CACHE_MAX_AGE_SECONDS = 12 * 60 * 60  # selaras dengan ttl st.cache_data di bawah
 
-# 10 musim kompetisi terakhir (format 20 tim / 38 pekan) -> sesuai Bab 3.2
-# "Sampel dan Ukuran Sampel" pada dokumen metodologi penelitian.
+# 10 musim kompetisi terakhir (format 20 tim / 38 pekan) ->
 # Cutoff pada musim 2025/2026 (season-2526) karena EPL saat ini sudah
 # memasuki musim 2026/2027, sehingga 2025/2026 adalah musim terakhir yang
 # sudah selesai penuh (38 pekan) dan layak dipakai sebagai data latih/uji.
