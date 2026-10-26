@@ -1,8 +1,7 @@
 """
 models.py
 =========
-Eksperimen pelatihan & evaluasi model (Bab 5.1 poin 6-7 dan Bab 6.1
-Metodologi Penelitian):
+Eksperimen pelatihan & evaluasi model :
   - Model utama   : XGBoost (klasifikasi hasil H/D/A + regresi skor)
   - Benchmark     : Random Forest
   - Baseline      : Logistic Regression (klasifikasi)
